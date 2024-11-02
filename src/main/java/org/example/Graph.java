@@ -114,52 +114,59 @@ public class Graph {
     }
 
     // New method to find negative cycles using Bellman-Ford
-    public List<Node> findNegativeCycle() {
-        Map<Node, Integer> distance = new HashMap<>();
-        Map<Node, Node> predecessor = new HashMap<>();
-        List<Node> cycle = new ArrayList<>();
+    public List<Node> findNegativeCycle() { 
+        Map<Node, Double> distances = new HashMap<>();
+        Map<Node, Node> parents = new HashMap<>();
+        List<Node> negativeCycle = new ArrayList<>();
 
-        // Initialize distances
-        for (Node node : nodes.values()) {
-            distance.put(node, Integer.MAX_VALUE);
+        for (Node node: nodes.values()) {
+            distances.put(node, Double.MAX_VALUE);
         }
-        distance.put(refinerySource, 0);
 
-        // Relax edges |V| - 1 times
+        distances.put(refinerySource, 0.0);
+
         for (int i = 1; i < nodes.size(); i++) {
+            Boolean updated = false;
+
             for (Node u : nodes.values()) {
                 for (Map.Entry<Node, Edge> entry : adjacencyList.get(u).entrySet()) {
                     Node v = entry.getKey();
                     Edge edge = entry.getValue();
-                    if (distance.get(u) != Integer.MAX_VALUE && 
-                        distance.get(u) + edge.cost < distance.get(v)) {
-                        distance.put(v, distance.get(u) + edge.cost);
-                        predecessor.put(v, u);
+                    if (distances.get(u) != Double.MAX_VALUE && 
+                        distances.get(u) + edge.cost < distances.get(v)) {
+                        distances.put(v, distances.get(u) + edge.cost);
+                        parents.put(v, u);
+                        updated = true;
                     }
                 }
             }
+
+            if (updated == false)
+                break;
         }
 
-        // Check for negative-weight cycles
         for (Node u : nodes.values()) {
             for (Map.Entry<Node, Edge> entry : adjacencyList.get(u).entrySet()) {
                 Node v = entry.getKey();
                 Edge edge = entry.getValue();
-                if (distance.get(u) != Integer.MAX_VALUE && 
-                    distance.get(u) + edge.cost < distance.get(v)) {
-                    // Negative cycle detected
-                    cycle.add(v);
+
+                // check if a negative cycle exists
+                if (distances.get(u) != Double.MAX_VALUE && 
+                    distances.get(u) + edge.cost < distances.get(v)) {
+                    negativeCycle.add(v);
                     Node curr = u;
                     while (curr != v) {
-                        cycle.add(curr);
-                        curr = predecessor.get(curr);
+                        negativeCycle.add(curr);
+                        curr = parents.get(curr);
                     }
-                    Collections.reverse(cycle);
-                    return cycle; // Return the cycle
+                    Collections.reverse(negativeCycle);
+                    // return the negative cycle
+                    return negativeCycle; 
                 }
             }
         }
-        return null; // No negative cycle found
+
+        return null;
     }
 
     // Method to create a residual graph
