@@ -1,3 +1,5 @@
+package org.example;
+
 class Client extends Node {
     int maxInput, overInputPenalty, lateDeliveryPenalty, earlyDeliveryPenalty;
 
