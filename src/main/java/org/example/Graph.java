@@ -2,8 +2,10 @@ package org.example;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 public class Graph {
     Refinery refinerySource;
@@ -199,6 +201,71 @@ public class Graph {
         return residualGraph;
     }
 
+    public int edmondsKarp(Node source, Node sink) {
+        int maxFlow = 0;
+
+        while (true) {
+            Map<Node, Edge> parentMap = new HashMap<>();
+            int pathFlow = bfsFindAugmentingPath(source, sink, parentMap);
+
+            if (pathFlow == 0) break;
+
+            maxFlow += pathFlow;
+            Node current = sink;
+
+            while (current != source) {
+                Node parent = parentMap.get(current).uuidFrom.equals(current.uuid) ? current : nodes.get(parentMap.get(current).uuidFrom);
+                Edge edge = adjacencyList.get(parent).get(current);
+                edge.flow += pathFlow;
+
+                if (adjacencyList.get(current).containsKey(parent)) {
+                    adjacencyList.get(current).get(parent).flow -= pathFlow;
+                } else {
+                    Edge reverseEdge = new Edge(edge.uuid, edge.uuidTo, edge.uuidFrom, -pathFlow, pathFlow, edge.cost, edge.leadTime);
+                    adjacencyList.get(current).put(parent, reverseEdge);
+                }
+                current = parent;
+            }
+        }
+
+        return maxFlow;
+    }
+
+    private int bfsFindAugmentingPath(Node source, Node sink, Map<Node, Edge> parentMap) {
+        Map<Node, Boolean> visited = new HashMap<>();
+        Queue<Node> queue = new LinkedList<>();
+        queue.add(source);
+        visited.put(source, true);
+
+        while (!queue.isEmpty()) {
+            Node node = queue.poll();
+
+            for (Map.Entry<Node, Edge> entry : adjacencyList.get(node).entrySet()) {
+                Node neighbor = entry.getKey();
+                Edge edge = entry.getValue();
+
+                if (!visited.containsKey(neighbor) && edge.capacity > edge.flow) {
+                    visited.put(neighbor, true);
+                    parentMap.put(neighbor, edge);
+
+                    if (neighbor.equals(sink)) {
+                        int pathFlow = Integer.MAX_VALUE;
+                        Node current = sink;
+
+                        while (current != source) {
+                            pathFlow = Math.min(pathFlow, parentMap.get(current).capacity - parentMap.get(current).flow);
+                            current = parentMap.get(current).uuidFrom.equals(current.uuid) ? current : nodes.get(parentMap.get(current).uuidFrom);
+                        }
+
+                        return pathFlow;
+                    }
+                    queue.add(neighbor);
+                }
+            }
+        }
+        return 0;
+    }
+
     // Method to push flow through a negative cycle
     public void pushFlowThroughCycle(List<Node> cycle, double flow) {
         for (int i = 0; i < cycle.size(); i++) {
@@ -221,8 +288,10 @@ public class Graph {
         return totalCost;
     }
 
-    public double calculateMinCostMaxFlow() {
+    public double calculateMinCostMaxFlow(Node sink) {
         double totalCost = 0;
+
+        int maxFlow = edmondsKarp(refinerySource, sink);
 
         while (true) {
             // Create residual graph

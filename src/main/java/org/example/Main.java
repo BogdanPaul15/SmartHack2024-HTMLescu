@@ -15,8 +15,8 @@ public class Main {
         graph.addNode(tank);
         graph.addNode(client);
 
-        Edge refineryToTank = new Edge("2", "2", "3", 0, 1, 0, 0);
-        Edge tankToClient = new Edge("3", "3", "4", 0, 1, 0, 0);
+        Edge refineryToTank = new Edge("2", "2", "3", 0, 1, 10, 0);
+        Edge tankToClient = new Edge("3", "3", "4", 0, 1, 10, 0);
 
         graph.addEdge(refineryToTank, true);
         graph.addEdge(tankToClient, true);
@@ -27,7 +27,7 @@ public class Main {
         graph.createResidualGraph().display();
 
         // // Calculate the min-cost max-flow
-        // int minCost = calculateMinCostMaxFlow(graph);
-        // System.out.println("Minimum cost for the package: " + minCost);
+        double minCost = graph.calculateMinCostMaxFlow(client);
+        System.out.println("Minimum cost for the package: " + minCost);
     }
 }
