@@ -1,16 +1,16 @@
 package org.example;
 
 public class Refinery extends Node {
-    int capacity, maxOutput, production, overflowPenalty, underflowPenalty, overOutputPenalty;
-    int productionCost, productionCO2, stock;
+    public int capacity, maxOutput, production, stock;
+    public double overflowPenalty, underflowPenalty, overOutputPenalty, productionCost, productionCO2;
 
     public Refinery() {
-        super("1", "Source", NodeType.RAFINERY);    
+        super("1", "Source", NodeType.REFINERY);
     }
 
-    public Refinery(String id, String name, int capacity, int maxOutput, int production, int overflowPenalty,
-                    int underflowPenalty, int overOutputPenalty, int productionCost, int productionCO2, int stock) {
-        super(id, name, NodeType.RAFINERY);
+    public Refinery(String id, String name, int capacity, int maxOutput, int production, double overflowPenalty,
+                    double underflowPenalty, double overOutputPenalty, double productionCost, double productionCO2, int stock) {
+        super(id, name, NodeType.REFINERY);
         this.capacity = capacity;
         this.maxOutput = maxOutput;
         this.production = production;

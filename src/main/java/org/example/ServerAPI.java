@@ -4,23 +4,26 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ServerAPI {
     private static ServerAPI instance = null;
     private static final String URI = "http://localhost:8080/api/v1";
     private static final String APIKEY = "7bcd6334-bc2e-4cbf-b9d4-61cb9e868869";
-    public static String sessionID = null;
+    private static String sessionID = null;
+    private static Integer day = 0;
     private static final HttpClient client = HttpClient.newHttpClient();
 
     private ServerAPI() {
         startSession();
     }
 
-    public static synchronized ServerAPI getInstance() {
+    public static ServerAPI getInstance() {
         if (instance == null) instance = new ServerAPI();
         return instance;
     }
@@ -46,18 +49,19 @@ public class ServerAPI {
                 // Otherwise, it's a plain string (ID)
                 System.out.println("Session ID: " + responseBody);
                 sessionID = responseBody;
+                day = 0;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public JsonNode playRound() {
+    public JsonNode playRound(List<Movement> movements) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonBody = objectMapper.createObjectNode();
-            jsonBody.put("day", 0);
-            jsonBody.set("movements", objectMapper.createArrayNode());
+            jsonBody.put("day", day++);
+            jsonBody.set("movements", movementsToNode(movements));
 
             String requestBody = objectMapper.writeValueAsString(jsonBody);
             HttpRequest req = HttpRequest.newBuilder()
@@ -99,5 +103,19 @@ public class ServerAPI {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private ArrayNode movementsToNode(@org.jetbrains.annotations.NotNull List<Movement> movements) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+
+        for (Movement movement : movements) {
+            ObjectNode movementNode = objectMapper.createObjectNode();
+            movementNode.put("connectionId", movement.getConnectionId());
+            movementNode.put("amount", movement.getAmount());
+            arrayNode.add(movementNode);
+        }
+
+        return arrayNode;
     }
 }
