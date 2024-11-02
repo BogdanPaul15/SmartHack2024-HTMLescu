@@ -1,10 +1,11 @@
 package org.example;
 
 class Tank extends Node {
-    int capacity, maxInput, maxOutput, overflowPenalty, underflowPenalty, overInputPenalty, overOutputPenalty, initialStock;
+    public int capacity, maxInput, maxOutput, initialStock;
+    public double overflowPenalty, underflowPenalty, overInputPenalty, overOutputPenalty;
 
-    public Tank(String id, String name, int capacity, int maxInput, int maxOutput, int overflowPenalty,
-                int underflowPenalty, int overInputPenalty, int overOutputPenalty, int initialStock) {
+    public Tank(String id, String name, int capacity, int maxInput, int maxOutput, double overflowPenalty,
+                double underflowPenalty, double overInputPenalty, double overOutputPenalty, int initialStock) {
         super(id, name, NodeType.TANK);
         this.capacity = capacity;
         this.maxInput = maxInput;
