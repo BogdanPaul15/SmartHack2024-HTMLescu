@@ -1,5 +1,8 @@
 package org.example;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Graph {
@@ -16,6 +19,16 @@ public class Graph {
         nodes.put(refinerySource.uuid, refinerySource);
     }
 
+    public Graph(Graph graph) {
+        this.nodes = new HashMap<>();
+        this.adjacencyList = new HashMap<>();
+
+        for (Node node: graph.nodes.values()) {
+            this.nodes.put(node.uuid, node);
+            this.adjacencyList.put(node, new HashMap<>());
+        }
+    }
+
     public void addNode(Node node) {
         nodes.putIfAbsent(node.uuid, node);
         adjacencyList.putIfAbsent(node, new HashMap<>());
@@ -30,14 +43,15 @@ public class Graph {
         }
     }
 
-    public void addEdge(Edge edge) {
+    public void addEdge(Edge edge, Boolean maxCapacity) {
         Node nodeFrom = nodes.get(edge.uuidFrom);
         Node nodeTo = nodes.get(edge.uuidTo);
 
         // recompute the maximum capacity for the edge by comparing
         // the max output of the incoming node, the max input of the outgoing node,
         // and the intial capacity of the edge
-        edge.capacity = this.getMaxCapacityEdge(edge, nodeFrom, nodeTo);
+        if (maxCapacity == true)
+            edge.capacity = this.getMaxCapacityEdge(edge, nodeFrom, nodeTo);
 
         adjacencyList.get(nodeFrom).put(nodeTo, edge);
     }
@@ -77,5 +91,163 @@ public class Graph {
             }
             System.out.println();
         }
+    }
+
+    public int getFlow(Node from, Node to) {
+        if (adjacencyList.containsKey(from) && adjacencyList.get(from).containsKey(to)) {
+            return adjacencyList.get(from).get(to).flow;
+        }
+        return 0;
+    }
+
+    public void updateFlow(Node from, Node to, double flowChange) {
+        if (adjacencyList.containsKey(from) && adjacencyList.get(from).containsKey(to)) {
+            Edge edge = adjacencyList.get(from).get(to);
+            edge.flow += flowChange;
+
+            // Update backward flow
+            if (adjacencyList.containsKey(to) && adjacencyList.get(to).containsKey(from)) {
+                Edge backwardEdge = adjacencyList.get(to).get(from);
+                backwardEdge.flow -= flowChange;
+            }
+        }
+    }
+
+    // New method to find negative cycles using Bellman-Ford
+    public List<Node> findNegativeCycle() {
+        Map<Node, Integer> distance = new HashMap<>();
+        Map<Node, Node> predecessor = new HashMap<>();
+        List<Node> cycle = new ArrayList<>();
+
+        // Initialize distances
+        for (Node node : nodes.values()) {
+            distance.put(node, Integer.MAX_VALUE);
+        }
+        distance.put(refinerySource, 0);
+
+        // Relax edges |V| - 1 times
+        for (int i = 1; i < nodes.size(); i++) {
+            for (Node u : nodes.values()) {
+                for (Map.Entry<Node, Edge> entry : adjacencyList.get(u).entrySet()) {
+                    Node v = entry.getKey();
+                    Edge edge = entry.getValue();
+                    if (distance.get(u) != Integer.MAX_VALUE && 
+                        distance.get(u) + edge.cost < distance.get(v)) {
+                        distance.put(v, distance.get(u) + edge.cost);
+                        predecessor.put(v, u);
+                    }
+                }
+            }
+        }
+
+        // Check for negative-weight cycles
+        for (Node u : nodes.values()) {
+            for (Map.Entry<Node, Edge> entry : adjacencyList.get(u).entrySet()) {
+                Node v = entry.getKey();
+                Edge edge = entry.getValue();
+                if (distance.get(u) != Integer.MAX_VALUE && 
+                    distance.get(u) + edge.cost < distance.get(v)) {
+                    // Negative cycle detected
+                    cycle.add(v);
+                    Node curr = u;
+                    while (curr != v) {
+                        cycle.add(curr);
+                        curr = predecessor.get(curr);
+                    }
+                    Collections.reverse(cycle);
+                    return cycle; // Return the cycle
+                }
+            }
+        }
+        return null; // No negative cycle found
+    }
+
+    // Method to create a residual graph
+    public Graph createResidualGraph() {
+        Graph residualGraph = new Graph(this);
+        
+        for (Node from : adjacencyList.keySet()) {
+            for (Map.Entry<Node, Edge> entry : adjacencyList.get(from).entrySet()) {
+                Node to = entry.getKey();
+                Edge edge = entry.getValue();
+
+                // Add forward edge with residual capacity
+                if (edge.capacity > edge.flow) {
+                    Edge residualEdge = new Edge(edge.uuid, edge.uuidFrom, edge.uuidTo, 
+                                                  edge.flow, edge.capacity - edge.flow, 
+                                                  edge.cost, edge.leadTime);
+                    residualGraph.addEdge(residualEdge, false);
+                }
+
+                // Add backward edge with flow as capacity
+                if (edge.flow > 0) {
+                    Edge backwardEdge = new Edge(edge.uuid, edge.uuidTo, edge.uuidFrom, 
+                                                  -edge.flow, edge.flow, 
+                                                  -edge.cost, edge.leadTime);
+                    residualGraph.addEdge(backwardEdge, false);
+                }
+            }
+        }
+
+        return residualGraph;
+    }
+
+    // Method to push flow through a negative cycle
+    public void pushFlowThroughCycle(List<Node> cycle, double flow) {
+        for (int i = 0; i < cycle.size(); i++) {
+            Node from = cycle.get(i);
+            Node to = cycle.get((i + 1) % cycle.size()); // Wrap around
+
+            updateFlow(from, to, flow);
+        }
+    }
+
+    public int calculateTotalCost() {
+        int totalCost = 0;
+    
+        for (Node from : adjacencyList.keySet()) {
+            for (Edge edge : adjacencyList.get(from).values()) {
+                totalCost += edge.cost * edge.flow; // Cost multiplied by flow gives total cost for that edge
+            }
+        }
+    
+        return totalCost;
+    }
+
+    public double calculateMinCostMaxFlow() {
+        double totalCost = 0;
+
+        while (true) {
+            // Create residual graph
+            Graph residualGraph = createResidualGraph();
+
+            // Find a negative cycle
+            List<Node> negativeCycle = residualGraph.findNegativeCycle();
+
+            if (negativeCycle == null) {
+                break; // No more negative cycles, we are done
+            }
+
+            // Calculate the flow that can be pushed through the cycle
+            double flowToPush = Double.MAX_VALUE;
+
+            for (int i = 0; i < negativeCycle.size(); i++) {
+                Node from = negativeCycle.get(i);
+                Node to = negativeCycle.get((i + 1) % negativeCycle.size());
+                Edge edge = residualGraph.adjacencyList.get(from).get(to);
+
+                if (edge != null) {
+                    flowToPush = Math.min(flowToPush, edge.capacity - edge.flow);
+                }
+            }
+
+            // Push flow through the cycle
+            pushFlowThroughCycle(negativeCycle, flowToPush);
+        }
+
+        // Calculate the total cost based on the flows
+        totalCost = calculateTotalCost();
+
+        return totalCost;
     }
 }
