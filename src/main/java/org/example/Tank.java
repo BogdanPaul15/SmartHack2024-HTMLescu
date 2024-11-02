@@ -1,3 +1,5 @@
+package org.example;
+
 class Tank extends Node {
     int capacity, maxInput, maxOutput, overflowPenalty, underflowPenalty, overInputPenalty, overOutputPenalty, initialStock;
 

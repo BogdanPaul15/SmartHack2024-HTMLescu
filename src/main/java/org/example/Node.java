@@ -1,3 +1,5 @@
+package org.example;
+
 abstract class Node {
     String uuid;
     String name;
