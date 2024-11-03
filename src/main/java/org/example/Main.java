@@ -118,8 +118,13 @@ public class Main {
         for (Demand demand : graph.getDemands()) {
             // reverse the list to have it sorted from the customer to the root
             List<Edge> edges = graph.calculateMinCostMaxFlow(graph.getCustomer(demand.getCustomerId()));
-            Collections.reverse(edges);
+            for (Edge edge : edges) {
+                Node from = graph.nodes.get(edge.uuidFrom);
+                Node to = graph.nodes.get(edge.uuidTo);
+                edge.computeCost(from, to, demand.getAmount(), ServerAPI.getInstance().getDay(), 0, 100);
+            }
 
+            Collections.reverse(edges);
             int dayCounter = 0;
             for (Edge edge : edges) {
                 dayCounter += edge.leadTime;

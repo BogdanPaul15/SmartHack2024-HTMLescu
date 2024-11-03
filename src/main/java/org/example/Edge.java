@@ -25,7 +25,6 @@ public class Edge {
         this.capacity = capacity;
         this.flow = 0;
         this.cost = Integer.MAX_VALUE;
-        this.ComputeCost();
         this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
         this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
     }
@@ -74,7 +73,7 @@ public class Edge {
         pendingMovementsStart.remove(movement);
     }
 
-    public void ComputeCost() {
+    public void computeCost(final Node from, final Node to, int amount, int day, int startDay, int endDay) {
         // default costs
         if (type == ConnectionType.PIPELINE) {
             cost = (int) Math.ceil(distance * (pipelineCostPerDistanceAndVolume + pipelineCo2PerDistanceAndVolume));
@@ -85,5 +84,46 @@ public class Edge {
         }
 
         // penalty cases
+        if (from.getClass() == Refinery.class) {
+            Refinery refinery = (Refinery) from;
+            if (amount > refinery.maxOutput) { // REFINERY_OVER_OUTPUT
+                double penalty = (amount - refinery.maxOutput) * refinery.overOutputPenalty;
+                cost += penalty;
+            }
+        } else if (from.getClass() == Tank.class) {
+            Tank tank = (Tank) from;
+            if (amount > tank.maxOutput) { // STORAGE_OVER_OUTPUT
+                double penalty = (amount - tank.maxOutput) * tank.overOutputPenalty;
+                cost += penalty;
+            }
+        } else if (from.getClass() == Customer.class) {
+            Customer customer = (Customer) from;
+        }
+
+        if (to.getClass() == Refinery.class) {
+            Refinery refinery = (Refinery) to;
+        } else if (to.getClass() == Tank.class) {
+            Tank tank = (Tank) to;
+            if (amount > tank.maxInput) { // STORAGE_TYPE_OVER_INPUT
+                double penalty = (amount - tank.maxInput) * tank.overInputPenalty;
+                cost += penalty;
+            }
+        } else if (to.getClass() == Customer.class) {
+            Customer customer = (Customer) to;
+            if (amount > customer.maxInput) { // CUSTOMER_OVER_INPUT
+                double penalty = (amount - customer.maxInput) * customer.overInputPenalty;
+                cost += penalty;
+            }
+            if (day < startDay) { // CUSTOMER_EARLY_DELIVERY
+                // add penalty
+            } else if (endDay < day) { // CUSTOMER_LATE_DELIVERY
+                // add penalty
+            }
+        }
+
+        if (amount > capacity) {
+            // add penalty
+//            int penalty = (amount - capacity); // TODO(Alex Mirzea): complete this
+        }
     }
 }
