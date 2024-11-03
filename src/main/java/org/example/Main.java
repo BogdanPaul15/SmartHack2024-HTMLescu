@@ -1,5 +1,7 @@
 package org.example;
 
+import java.util.List;
+
 public class Main {
     public static void main(String[] args) throws Exception {
         // Initialize a new graph
@@ -42,12 +44,13 @@ public class Main {
         graph.addEdge(tank2ToClient2, true);
 
         // Calculate the min-cost max-flow to Client 1
-        double minCostToClient1 = graph.calculateMinCostMaxFlow(client1);
-        System.out.println("Minimum cost for the package to Client 1: " + minCostToClient1);
+        
+        List<Edge> lista1 = graph.calculateMinCostMaxFlow(client1);
+        System.out.println(lista1);
 
         graph.resetFlows(); // Reset the flows to 0
 
-        double minCostToClient2WithFlow = graph.calculateMinCostMaxFlow(client2);
-        System.out.println("Minimum cost for the package to Client 2 with flow: " + minCostToClient2WithFlow);
+        List<Edge> lista2 = graph.calculateMinCostMaxFlow(client2);
+        System.out.println(lista2);
     }
 }

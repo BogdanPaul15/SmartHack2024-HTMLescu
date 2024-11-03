@@ -315,19 +315,22 @@ public class Graph {
     }
     
 
-    public int calculateTotalCost() {
-        int totalCost = 0;
+    public List<Edge> calculateTotalCost() {
+        // int totalCost = 0;
+        List<Edge> pathToMinEdges = new ArrayList<>();
     
         for (Node from : adjacencyList.keySet()) {
             for (Edge edge : adjacencyList.get(from).values()) {
-                totalCost += edge.cost * Math.max(0, edge.flow); // Ensures flow is non-negative
+                if (edge.flow > 0) {
+                    pathToMinEdges.add(edge);
+                }
+                // totalCost += edge.cost * Math.max(0, edge.flow); // Ensures flow is non-negative
             }
         }
-        return totalCost;
+        return pathToMinEdges;
     }
-    
 
-    public double calculateMinCostMaxFlow(Node sink) {
+    public List<Edge> calculateMinCostMaxFlow(Node sink) {
         double totalCost = 0;
         double maxFlow = edmondsKarp(refinerySource, sink);
     
@@ -353,8 +356,8 @@ public class Graph {
             pushFlowThroughCycle(negativeCycle, flowToPush);
         }
     
-        totalCost = calculateTotalCost();
-        return totalCost;
+        List<Edge> pathToMinEdges = calculateTotalCost();
+        return pathToMinEdges;
     }
     
     public void resetFlows() {
