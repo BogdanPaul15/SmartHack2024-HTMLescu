@@ -12,14 +12,21 @@ public class Graph {
     private final PriorityQueue<Movement> pendingMovements;
     private List<Movement> todayMovements;
 
+    private List<Refinery> refineries;
+    private List<Edge> refineriesEdges;
+
     public Graph() {
-        nodes = new HashMap<>();
-        adjacencyList = new HashMap<>();
-        refinerySource = new Refinery();
-        adjacencyList.put(refinerySource, new HashMap<>());
-        nodes.put(refinerySource.uuid, refinerySource);
-        demands = new ArrayList<>();
-        pendingMovements = new PriorityQueue<>(new MovementComparator());
+        this.nodes = new HashMap<>();
+        this.adjacencyList = new HashMap<>();
+        this.refinerySource = new Refinery();
+        this.adjacencyList.put(refinerySource, new HashMap<>());
+        this.nodes.put(refinerySource.uuid, refinerySource);
+        this.demands = new ArrayList<>();
+        this.pendingMovements = new PriorityQueue<>(new MovementComparator());
+        this.todayMovements = new ArrayList<>();
+
+        this.refineries = new ArrayList<>();
+        this.refineriesEdges = new ArrayList<>();
     }
 
     public Graph(Graph graph) {
@@ -49,13 +56,8 @@ public class Graph {
         nodes.putIfAbsent(node.uuid, node);
         adjacencyList.putIfAbsent(node, new HashMap<>());
 
-        // check if the added node is a Refinery node,
-        // in this case the Refinery Source must be connected to it
-        if (node.type == NodeType.REFINERY) {
-            // uuid for the edge and uuid from do not matter,
-            // as the refinery source is used to complete the flow algorithm
-            Edge rafinerySourceToRafinery = new Edge("", refinerySource.uuid, node.uuid, 0, 0, ConnectionType.SEF, ((Refinery) node).stock);
-            adjacencyList.get(refinerySource).put(node, rafinerySourceToRafinery);
+        if (node.getClass() == Refinery.class) {
+            refineries.add((Refinery) node);
         }
     }
 
@@ -98,6 +100,10 @@ public class Graph {
     public void addEdge(final Edge edge, final Boolean maxCapacity) {
         Node nodeFrom = nodes.get(edge.uuidFrom);
         Node nodeTo = nodes.get(edge.uuidTo);
+
+        if (nodeFrom != null && nodeTo != null && nodeFrom.getClass() == Refinery.class && nodeTo.getClass() == Refinery.class) {
+            refineriesEdges.add(edge);
+        }
 
         // recompute the maximum capacity for the edge by comparing
         // the max output of the incoming node, the max input of the outgoing node,
