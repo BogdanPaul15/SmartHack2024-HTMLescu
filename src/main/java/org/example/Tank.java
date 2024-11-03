@@ -16,4 +16,16 @@ class Tank extends Node {
         this.overOutputPenalty = overOutputPenalty;
         this.stock = initialStock;
     }
+
+    public Tank(final Tank other) {
+        super(other);
+        this.capacity = other.capacity;
+        this.maxInput = other.maxInput;
+        this.maxOutput = other.maxOutput;
+        this.overflowPenalty = other.overflowPenalty;
+        this.underflowPenalty = other.underflowPenalty;
+        this.overInputPenalty = other.overInputPenalty;
+        this.overOutputPenalty = other.overOutputPenalty;
+        this.stock = other.stock;
+    }
 }

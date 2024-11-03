@@ -12,4 +12,10 @@ abstract class Node {
         this.name = name;
         this.type = type;
     }
+
+    public Node(Node other) {
+        this.uuid = other.uuid;
+        this.name = other.name;
+        this.type = other.type;
+    }
 }
