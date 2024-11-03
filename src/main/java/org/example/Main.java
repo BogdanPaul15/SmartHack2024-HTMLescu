@@ -33,14 +33,14 @@ public class Main {
         graph.addNode(client2);
 
         // Create edges between nodes
-        Edge refinery1ToTank1 = new Edge("1", "1", "3", 0, 0, ConnectionType.PIPELINE, 100, 5, 0);  // Edge from Refinery 1 to Tank 1
-        Edge refinery2ToTank1 = new Edge("2", "2", "3", 0, 0, ConnectionType.PIPELINE, 150, 4, 0);  // Edge from Refinery 2 to Tank 1
-        Edge refinery1ToTank2 = new Edge("3", "1", "4", 0, 0, ConnectionType.PIPELINE, 80, 6, 0);   // Edge from Refinery 1 to Tank 2
-        Edge refinery2ToTank2 = new Edge("4", "2", "4", 0, 0, ConnectionType.PIPELINE, 100, 5, 0);  // Edge from Refinery 2 to Tank 2
-        Edge tank1ToClient1 = new Edge("5", "3", "5", 0, 0, ConnectionType.TRUCK, 50, 8, 0);     // Edge from Tank 1 to Client 1
-        Edge tank1ToClient2 = new Edge("6", "3", "6", 0, 0, ConnectionType.TRUCK, 30, 7, 0);     // Edge from Tank 1 to Client 2
-        Edge tank2ToClient1 = new Edge("7", "4", "5", 0, 0, ConnectionType.TRUCK, 40, 9, 0);     // Edge from Tank 2 to Client 1
-        Edge tank2ToClient2 = new Edge("8", "4", "6", 0, 0, ConnectionType.TRUCK, 20, 10, 0);
+        Edge refinery1ToTank1 = new Edge("1", "1", "3", 3, 0, ConnectionType.PIPELINE, 100);  // Edge from Refinery 1 to Tank 1
+        Edge refinery2ToTank1 = new Edge("2", "2", "3", 4, 0, ConnectionType.PIPELINE, 150);  // Edge from Refinery 2 to Tank 1
+        Edge refinery1ToTank2 = new Edge("3", "1", "4", 5, 0, ConnectionType.PIPELINE, 80);   // Edge from Refinery 1 to Tank 2
+        Edge refinery2ToTank2 = new Edge("4", "2", "4", 6, 0, ConnectionType.PIPELINE, 100);  // Edge from Refinery 2 to Tank 2
+        Edge tank1ToClient1 = new Edge("5", "3", "5", 7, 0, ConnectionType.TRUCK, 50);     // Edge from Tank 1 to Client 1
+        Edge tank1ToClient2 = new Edge("6", "3", "6", 7, 0, ConnectionType.TRUCK, 30);     // Edge from Tank 1 to Client 2
+        Edge tank2ToClient1 = new Edge("7", "4", "5", 4, 0, ConnectionType.TRUCK, 40);     // Edge from Tank 2 to Client 1
+        Edge tank2ToClient2 = new Edge("8", "4", "6", 3, 0, ConnectionType.TRUCK, 20);
 
         // Add edges to the graph
         graph.addEdge(refinery1ToTank1, true);
@@ -56,6 +56,9 @@ public class Main {
 
         List<Edge> lista1 = graph.calculateMinCostMaxFlow(client1);
         System.out.println(lista1);
+        for (Edge edge: lista1) {
+            System.out.println(edge.flow + " " + edge.cost);
+        }
 
         graph.resetFlows(); // Reset the flows to 0
 
