@@ -1,7 +1,7 @@
 package org.example;
 
 class Tank extends Node {
-    public int capacity, maxInput, maxOutput, initialStock;
+    public int capacity, maxInput, maxOutput, stock;
     public double overflowPenalty, underflowPenalty, overInputPenalty, overOutputPenalty;
 
     public Tank(String id, String name, int capacity, int maxInput, int maxOutput, double overflowPenalty,
@@ -14,6 +14,6 @@ class Tank extends Node {
         this.underflowPenalty = underflowPenalty;
         this.overInputPenalty = overInputPenalty;
         this.overOutputPenalty = overOutputPenalty;
-        this.initialStock = initialStock;
+        this.stock = initialStock;
     }
 }

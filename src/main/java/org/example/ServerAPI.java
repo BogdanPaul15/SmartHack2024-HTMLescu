@@ -56,7 +56,7 @@ public class ServerAPI {
         }
     }
 
-    public JsonNode playRound(List<Movement> movements) {
+    public JsonNode playRound(final List<Movement> movements) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode jsonBody = objectMapper.createObjectNode();
@@ -105,17 +105,21 @@ public class ServerAPI {
         }
     }
 
-    private ArrayNode movementsToNode(@org.jetbrains.annotations.NotNull List<Movement> movements) {
+    private ArrayNode movementsToNode(@org.jetbrains.annotations.NotNull final List<Movement> movements) {
         ObjectMapper objectMapper = new ObjectMapper();
         ArrayNode arrayNode = objectMapper.createArrayNode();
 
         for (Movement movement : movements) {
             ObjectNode movementNode = objectMapper.createObjectNode();
-            movementNode.put("connectionId", movement.getConnectionId());
+            movementNode.put("connectionId", movement.getEdgeId());
             movementNode.put("amount", movement.getAmount());
             arrayNode.add(movementNode);
         }
 
         return arrayNode;
+    }
+
+    public int getDay() {
+        return day;
     }
 }
