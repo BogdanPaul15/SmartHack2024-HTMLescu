@@ -34,4 +34,17 @@ public class Refinery extends Node {
         this.productionCO2 = other.productionCO2;
         this.stock = other.stock;
     }
+
+    @Override
+    double getMaxOutputPenalty() {
+        if (stock > capacity)
+            return (stock - capacity) * overflowPenalty;
+        else    
+            return 0;
+    }   
+
+    @Override 
+    double getMaxInputPenalty() {
+        return 0;
+    }
 }

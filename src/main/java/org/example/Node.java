@@ -1,7 +1,5 @@
 package org.example;
 
-import java.util.PriorityQueue;
-
 abstract class Node {
     String uuid;
     String name;
@@ -18,4 +16,7 @@ abstract class Node {
         this.name = other.name;
         this.type = other.type;
     }
+
+    abstract double getMaxOutputPenalty();
+    abstract double getMaxInputPenalty(); 
 }

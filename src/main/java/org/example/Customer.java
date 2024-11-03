@@ -19,4 +19,14 @@ class Customer extends Node {
         this.lateDeliveryPenalty = other.lateDeliveryPenalty;
         this.earlyDeliveryPenalty = other.earlyDeliveryPenalty;
     }
+
+    @Override
+    double getMaxOutputPenalty() {
+        return 0d;
+    }   
+
+    @Override 
+    double getMaxInputPenalty() {
+        return 0d;
+    }
 }
