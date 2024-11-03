@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Ref;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -115,19 +116,15 @@ public class Main {
 
     private static void decideMovements() {
         for (Demand demand : graph.getDemands()) {
+            // reverse the list to have it sorted from the customer to the root
             List<Edge> edges = graph.calculateMinCostMaxFlow(graph.getCustomer(demand.getCustomerId()));
-            int currentDay = ServerAPI.getInstance().getDay();
-            int totalPackets = demand.getAmount();
+            Collections.reverse(edges);
 
-            int startDay = currentDay;
+            int dayCounter = 0;
             for (Edge edge : edges) {
-                Movement movement = new Movement(edge.uuid, 5, currentDay + 1, edge.uuidFrom, edge.uuidTo, currentDay);
+                dayCounter += edge.leadTime;
+                Movement movement = new Movement(edge.uuid, edge.flow, demand.getStartDay() - dayCounter + 1, edge.uuidFrom, edge.uuidTo, demand.getStartDay() - dayCounter);
                 graph.addMovementStart(movement);
-//                for (int day = 0; day < edge.leadTime; day++) {
-//                    int packets = packetsPerDay(day + 1, edge.leadTime, totalPackets);
-//                    Movement movement = new Movement(edge.uuid, packets, startDay + edge.leadTime, edge.uuidFrom, edge.uuidTo, startDay);
-//                    graph.addMovementStart(movement);
-//                }
             }
             graph.resetFlows(); // this could break the code
         }
