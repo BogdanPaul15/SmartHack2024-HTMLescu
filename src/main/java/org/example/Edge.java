@@ -12,7 +12,8 @@ public class Edge {
     public int distance, leadTime, capacity;
     public ConnectionType type;
     public int flow, cost;
-    private final PriorityQueue<Movement> pendingMovements;
+    private final PriorityQueue<Movement> pendingMovementsArrive;
+    private final PriorityQueue<Movement> pendingMovementsStart;
 
     public Edge(String uuid, String uuidFrom, String uuidTo, int distance, int leadTime, ConnectionType type, int capacity) {
         this.uuid = uuid;
@@ -24,7 +25,8 @@ public class Edge {
         this.capacity = capacity;
         this.flow = 0;
         this.cost = Integer.MAX_VALUE;
-        this.pendingMovements = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
     }
 
     public Edge(String uuid, String uuidFrom, String uuidTo, int distance, int leadTime, ConnectionType type, int capacity, int cost, int flow) {
@@ -37,7 +39,8 @@ public class Edge {
         this.capacity = capacity;
         this.flow = flow;
         this.cost = cost;
-        this.pendingMovements = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
     }
 
     public Edge(final Edge other) {
@@ -50,15 +53,24 @@ public class Edge {
         this.capacity = other.capacity;
         this.flow = other.flow;
         this.cost = other.cost;
-        this.pendingMovements = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
     }
 
-    public void addMovement(final Movement movement) {
-        pendingMovements.add(movement);
+    public void addMovementArrive(final Movement movement) {
+        pendingMovementsArrive.add(movement);
     }
 
-    public void removeMovement(final Movement movement) {
-        pendingMovements.remove(movement);
+    public void removeMovementArrive(final Movement movement) {
+        pendingMovementsArrive.remove(movement);
+    }
+
+    public void addMovementStart(final Movement movement) {
+        pendingMovementsStart.add(movement);
+    }
+
+    public void removeMovementStart(final Movement movement) {
+        pendingMovementsStart.remove(movement);
     }
 
     public void computeCost(Node nodeFrom, Node nodeTo) {

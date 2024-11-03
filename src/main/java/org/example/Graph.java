@@ -9,7 +9,8 @@ public class Graph {
     Map<String, Node> nodes;
     Map<Node, Map<Node, Edge>> adjacencyList;
     private final List<Demand> demands;
-    private final PriorityQueue<Movement> pendingMovements;
+    private final PriorityQueue<Movement> pendingMovementsArrive;
+    private final PriorityQueue<Movement> pendingMovementsStart;
     private List<Movement> todayMovements;
 
     private List<Refinery> refineries;
@@ -22,7 +23,8 @@ public class Graph {
         this.adjacencyList.put(refinerySource, new HashMap<>());
         this.nodes.put(refinerySource.uuid, refinerySource);
         this.demands = new ArrayList<>();
-        this.pendingMovements = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
         this.todayMovements = new ArrayList<>();
 
         this.refineries = new ArrayList<>();
@@ -33,8 +35,8 @@ public class Graph {
         this.nodes = new HashMap<>();
         this.adjacencyList = new HashMap<>();
         this.demands = new ArrayList<>();
-        this.pendingMovements = new PriorityQueue<>(new MovementComparator());
-        this.todayMovements = new ArrayList<>();
+        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
 
         for (final Node node : graph.nodes.values()) {
             Node copiedNode = getNode(node);
@@ -166,23 +168,49 @@ public class Graph {
         return demands;
     }
 
-    public void addMovement(final Movement movement) {
-        pendingMovements.add(movement);
+    private void addMovementArrive(final Movement movement) {
+        pendingMovementsArrive.add(movement);
         Node from = nodes.get(movement.getFromId());
         Node to = nodes.get(movement.getToId());
         Edge edge = adjacencyList.get(from).get(to);
-        edge.addMovement(movement);
+        edge.addMovementArrive(movement);
+    }
 
-        if (refinerySource.uuid.equals(from.uuid)) {
-            edge.capacity -= movement.getAmount();
-        }
+    public void addMovementStart(final Movement movement) {
+        pendingMovementsStart.add(movement);
+        Node from = nodes.get(movement.getFromId());
+        Node to = nodes.get(movement.getToId());
+        Edge edge = adjacencyList.get(from).get(to);
+        edge.addMovementStart(movement);
     }
 
     public void solveMovements(final int day) {
-        todayMovements = new ArrayList<>();
-        for (final Movement movement : pendingMovements) {
+        for (final Movement movement : pendingMovementsStart) {
+            if (movement.getStartDay() == day) {
+                Node to = nodes.get(movement.getToId());
+                Node from = nodes.get(movement.getFromId());
+                Edge edge = adjacencyList.get(from).get(to);
+                if (from.getClass() == Tank.class) {
+                    Tank tank = (Tank) from;
+                    tank.stock -= movement.getAmount();
+                } else if (from.getClass() == Refinery.class) {
+                    Refinery refinery = (Refinery) from;
+                    refinery.stock -= movement.getAmount();
+                    if (from.uuid.equals(refinerySource.uuid)) edge.capacity -= movement.getAmount();
+                }
+
+                pendingMovementsStart.remove(movement);
+                edge.removeMovementStart(movement);
+                todayMovements.add(movement);
+                addMovementArrive(movement);
+            }
+        }
+
+        for (final Movement movement : pendingMovementsArrive) {
             if (movement.getArrivalDay() == day) {
                 Node to = nodes.get(movement.getToId());
+                Node from = nodes.get(movement.getFromId());
+                Edge edge = adjacencyList.get(from).get(to);
                 if (to.getClass() == Tank.class) {
                     Tank tank = (Tank) to;
                     tank.stock += movement.getAmount();
@@ -191,12 +219,8 @@ public class Graph {
                     refinery.stock += movement.getAmount();
                 }
 
-                Node from = nodes.get(movement.getFromId());
-                Edge edge = adjacencyList.get(from).get(to);
-                pendingMovements.remove(movement);
-                edge.removeMovement(movement);
-
-                todayMovements.add(movement);
+                pendingMovementsArrive.remove(movement);
+                edge.removeMovementArrive(movement);
             }
         }
     }
