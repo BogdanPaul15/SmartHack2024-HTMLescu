@@ -85,7 +85,13 @@ public class Main {
             Demand demand = new Demand(customerId, amount, postDay, startDay, endDay);
             graph.addDemand(demand);
         }
+
+        decideMovements();
         graph.solveMovements(ServerAPI.getInstance().getDay());
+    }
+
+    private static void decideMovements() {
+        // TODO(Alex Mirzea): add logic to create the movements for current round
     }
 
     private static void pumpRefineries() {
