@@ -28,4 +28,20 @@ class Tank extends Node {
         this.overOutputPenalty = other.overOutputPenalty;
         this.stock = other.stock;
     }
+
+    @Override
+    double getMaxOutputPenalty() {
+        if (stock > capacity) 
+            return (stock - capacity) * overflowPenalty;
+        else
+            return 0;
+    }   
+
+    @Override 
+    double getMaxInputPenalty() {
+        if (stock < 0) 
+            return (0 - stock) * underflowPenalty;
+        else
+            return 0;    
+    }
 }

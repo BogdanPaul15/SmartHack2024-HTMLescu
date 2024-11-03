@@ -24,7 +24,6 @@ public class Edge {
         this.capacity = capacity;
         this.flow = 0;
         this.cost = Integer.MAX_VALUE;
-        this.ComputeCost();
         this.pendingMovements = new PriorityQueue<>(new MovementComparator());
     }
 
@@ -62,7 +61,7 @@ public class Edge {
         pendingMovements.remove(movement);
     }
 
-    public void ComputeCost() {
+    public void computeCost(Node nodeFrom, Node nodeTo) {
         // default costs
         if (type == ConnectionType.PIPELINE) {
             cost = (int) Math.ceil(distance * (pipelineCostPerDistanceAndVolume + pipelineCo2PerDistanceAndVolume));
@@ -73,5 +72,7 @@ public class Edge {
         }
 
         // penalty cases
+        cost += (int) Math.ceil(nodeFrom.getMaxOutputPenalty());
+        cost += (int) Math.ceil(nodeTo.getMaxInputPenalty());
     }
 }

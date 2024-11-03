@@ -101,6 +101,10 @@ public class Graph {
         Node nodeFrom = nodes.get(edge.uuidFrom);
         Node nodeTo = nodes.get(edge.uuidTo);
 
+        // compute the cost considering the nodes stock, capacity
+        // and other metrics related to them
+        edge.computeCost(nodeFrom, nodeTo);
+
         if (nodeFrom != null && nodeTo != null && nodeFrom.getClass() == Refinery.class && nodeTo.getClass() == Refinery.class) {
             refineriesEdges.add(edge);
         }
