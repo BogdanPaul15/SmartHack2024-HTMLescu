@@ -21,13 +21,38 @@ public class Graph {
         nodes.put(refinerySource.uuid, refinerySource);
     }
 
+    private Node getNode(Node node) {
+        if (node.getClass() == Refinery.class) {
+            return new Refinery((Refinery) node);
+        }
+        if (node.getClass() == Tank.class) {
+            return new Tank((Tank) node);
+        }
+        if (node.getClass() == Client.class) {
+            return new Client((Client) node);
+        }
+
+        return null;
+    }
+
     public Graph(Graph graph) {
         this.nodes = new HashMap<>();
         this.adjacencyList = new HashMap<>();
-
-        for (Node node: graph.nodes.values()) {
-            this.nodes.put(node.uuid, node);
-            this.adjacencyList.put(node, new HashMap<>());
+    
+        for (Node node : graph.nodes.values()) {
+            Node copiedNode = getNode(node); // Make sure Node has a copy constructor or deep copy method
+            this.nodes.put(copiedNode.uuid, copiedNode);
+            this.adjacencyList.put(copiedNode, new HashMap<>());
+        }
+    
+        // Deep copy each edge in the adjacency list
+        for (Map.Entry<Node, Map<Node, Edge>> entry : graph.adjacencyList.entrySet()) {
+            Node fromNode = this.nodes.get(entry.getKey().uuid);
+            for (Map.Entry<Node, Edge> edgeEntry : entry.getValue().entrySet()) {
+                Node toNode = this.nodes.get(edgeEntry.getKey().uuid);
+                Edge edgeCopy = new Edge(edgeEntry.getValue()); // Make sure Edge has a copy constructor
+                this.adjacencyList.get(fromNode).put(toNode, edgeCopy);
+            }
         }
     }
 
@@ -40,7 +65,7 @@ public class Graph {
         if (node.type == NodeType.RAFINERY) {
             // uuif for the edge and uuid from do not matter,
             // as the refinery source is used to complete the flow algorithm
-            Edge rafinerySourceToRafinery = new Edge("", "1", node.uuid, 0, ((Refinery) node).stock, 1, 0);
+            Edge rafinerySourceToRafinery = new Edge("", "1", node.uuid, 0, ((Refinery) node).stock, 0, 0);
             adjacencyList.get(refinerySource).put(node, rafinerySourceToRafinery);
         }
     }
@@ -58,7 +83,7 @@ public class Graph {
         adjacencyList.get(nodeFrom).put(nodeTo, edge);
     }
 
-    public int getMaxCapacityEdge(Edge edge, Node nodeFrom, Node nodeTo) {
+    public double getMaxCapacityEdge(Edge edge, Node nodeFrom, Node nodeTo) {
         int nodeFromCapacity, nodeToCapacity;
 
         if (nodeFrom instanceof Refinery) {
@@ -95,7 +120,7 @@ public class Graph {
         }
     }
 
-    public int getFlow(Node from, Node to) {
+    public double getFlow(Node from, Node to) {
         if (adjacencyList.containsKey(from) && adjacencyList.get(from).containsKey(to)) {
             return adjacencyList.get(from).get(to).flow;
         }
@@ -206,7 +231,7 @@ public class Graph {
 
         while (true) {
             Map<Node, Edge> parentMap = new HashMap<>();
-            int pathFlow = bfsFindAugmentingPath(source, sink, parentMap);
+            double pathFlow = bfsFindAugmentingPath(source, sink, parentMap);
 
             if (pathFlow == 0) break;
 
@@ -231,32 +256,32 @@ public class Graph {
         return maxFlow;
     }
 
-    private int bfsFindAugmentingPath(Node source, Node sink, Map<Node, Edge> parentMap) {
+    private double bfsFindAugmentingPath(Node source, Node sink, Map<Node, Edge> parentMap) {
         Map<Node, Boolean> visited = new HashMap<>();
         Queue<Node> queue = new LinkedList<>();
         queue.add(source);
         visited.put(source, true);
-
+    
         while (!queue.isEmpty()) {
             Node node = queue.poll();
-
+    
             for (Map.Entry<Node, Edge> entry : adjacencyList.get(node).entrySet()) {
                 Node neighbor = entry.getKey();
                 Edge edge = entry.getValue();
-
+    
                 if (!visited.containsKey(neighbor) && edge.capacity > edge.flow) {
                     visited.put(neighbor, true);
                     parentMap.put(neighbor, edge);
-
+    
                     if (neighbor.equals(sink)) {
-                        int pathFlow = Integer.MAX_VALUE;
+                        double pathFlow = Double.MAX_VALUE;
                         Node current = sink;
-
+    
                         while (current != source) {
-                            pathFlow = Math.min(pathFlow, parentMap.get(current).capacity - parentMap.get(current).flow);
-                            current = parentMap.get(current).uuidFrom.equals(current.uuid) ? current : nodes.get(parentMap.get(current).uuidFrom);
+                            Edge e = parentMap.get(current);
+                            pathFlow = Math.min(pathFlow, e.capacity - e.flow);
+                            current = nodes.get(e.uuidFrom);
                         }
-
                         return pathFlow;
                     }
                     queue.add(neighbor);
@@ -265,65 +290,78 @@ public class Graph {
         }
         return 0;
     }
+    
 
     // Method to push flow through a negative cycle
     public void pushFlowThroughCycle(List<Node> cycle, double flow) {
         for (int i = 0; i < cycle.size(); i++) {
             Node from = cycle.get(i);
             Node to = cycle.get((i + 1) % cycle.size()); // Wrap around
-
-            updateFlow(from, to, flow);
+    
+            if (adjacencyList.containsKey(from) && adjacencyList.get(from).containsKey(to)) {
+                Edge edge = adjacencyList.get(from).get(to);
+                edge.flow += flow;
+    
+                if (adjacencyList.get(to).containsKey(from)) {
+                    Edge reverseEdge = adjacencyList.get(to).get(from);
+                    reverseEdge.flow -= flow;
+                } else {
+                    Edge reverseEdge = new Edge(edge.uuid, edge.uuidTo, edge.uuidFrom, -flow, flow, -edge.cost, edge.leadTime);
+                    reverseEdge.flow = -flow; // Resetting the flow for consistency
+                    adjacencyList.get(to).put(from, reverseEdge);
+                }
+            }
         }
     }
+    
 
     public int calculateTotalCost() {
         int totalCost = 0;
     
         for (Node from : adjacencyList.keySet()) {
             for (Edge edge : adjacencyList.get(from).values()) {
-                totalCost += edge.cost * edge.flow; // Cost multiplied by flow gives total cost for that edge
+                totalCost += edge.cost * Math.max(0, edge.flow); // Ensures flow is non-negative
             }
         }
-    
         return totalCost;
     }
+    
 
     public double calculateMinCostMaxFlow(Node sink) {
         double totalCost = 0;
-
-        int maxFlow = edmondsKarp(refinerySource, sink);
-
+        double maxFlow = edmondsKarp(refinerySource, sink);
+    
         while (true) {
-            // Create residual graph
             Graph residualGraph = createResidualGraph();
-
-            // Find a negative cycle
             List<Node> negativeCycle = residualGraph.findNegativeCycle();
-
+    
             if (negativeCycle == null) {
-                break; // No more negative cycles, we are done
+                break;
             }
-
-            // Calculate the flow that can be pushed through the cycle
+    
             double flowToPush = Double.MAX_VALUE;
-
             for (int i = 0; i < negativeCycle.size(); i++) {
                 Node from = negativeCycle.get(i);
                 Node to = negativeCycle.get((i + 1) % negativeCycle.size());
                 Edge edge = residualGraph.adjacencyList.get(from).get(to);
-
+    
                 if (edge != null) {
                     flowToPush = Math.min(flowToPush, edge.capacity - edge.flow);
                 }
             }
-
-            // Push flow through the cycle
+    
             pushFlowThroughCycle(negativeCycle, flowToPush);
         }
-
-        // Calculate the total cost based on the flows
+    
         totalCost = calculateTotalCost();
-
         return totalCost;
+    }
+    
+    public void resetFlows() {
+        for (Node from : adjacencyList.keySet()) {
+            for (Edge edge : adjacencyList.get(from).values()) {
+                edge.flow = 0;
+            }
+        }
     }
 }

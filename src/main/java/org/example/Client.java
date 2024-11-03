@@ -10,4 +10,12 @@ class Client extends Node {
         this.lateDeliveryPenalty = lateDeliveryPenalty;
         this.earlyDeliveryPenalty = earlyDeliveryPenalty;
     }
+
+    public Client(Client other) {
+        super(other);
+        this.maxInput = other.maxInput;
+        this.overInputPenalty = other.overInputPenalty;
+        this.lateDeliveryPenalty = other.lateDeliveryPenalty;
+        this.earlyDeliveryPenalty = other.earlyDeliveryPenalty;
+    }
 }

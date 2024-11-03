@@ -21,4 +21,17 @@ public class Refinery extends Node {
         this.productionCO2 = productionCO2;
         this.stock = stock;
     }
+
+    public Refinery(Refinery other) {
+        super(other);
+        this.capacity = other.capacity;
+        this.maxOutput = other.maxOutput;
+        this.production = other.production;
+        this.overflowPenalty = other.overflowPenalty;
+        this.underflowPenalty = other.underflowPenalty;
+        this.overOutputPenalty = other.overOutputPenalty;
+        this.productionCost = other.productionCost;
+        this.productionCO2 = other.productionCO2;
+        this.stock = other.stock;
+    }
 }
