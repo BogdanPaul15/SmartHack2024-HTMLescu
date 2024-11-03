@@ -9,7 +9,7 @@ public class Refinery extends Node {
     }
 
     public Refinery(String id, String name, int capacity, int maxOutput, int production, double overflowPenalty,
-                    double underflowPenalty, double overOutputPenalty, double productionCost, double productionCO2, int stock) {
+                    double underflowPenalty, double overOutputPenalty, double productionCost, double productionCO2, int initialStock) {
         super(id, name, NodeType.REFINERY);
         this.capacity = capacity;
         this.maxOutput = maxOutput;
@@ -19,6 +19,6 @@ public class Refinery extends Node {
         this.overOutputPenalty = overOutputPenalty;
         this.productionCost = productionCost;
         this.productionCO2 = productionCO2;
-        this.stock = stock;
+        this.stock = initialStock;
     }
 }

@@ -37,9 +37,8 @@ public class Main {
     }
 
     private static void playRound() {
-        List<Movement> movements = new ArrayList<>();
-        // TODO(Alex Mirzea): calculate movements
-
+        pumpRefineries();
+        List<Movement> movements = graph.getTodayMovements();
         ServerAPI serverAPI = ServerAPI.getInstance();
         JsonNode node = serverAPI.playRound(movements);
         for (JsonNode demandNode : node.get("demand")) {
@@ -51,6 +50,17 @@ public class Main {
 
             Demand demand = new Demand(customerId, amount, postDay, startDay, endDay);
             graph.addDemand(demand);
+        }
+        graph.solveMovements(ServerAPI.getInstance().getDay());
+    }
+
+    private static void pumpRefineries() {
+        Refinery sef = graph.refinerySource;
+        List<Refinery> refineries = graph.getAllRefineries();
+        for (final Refinery refinery : refineries) {
+            refinery.stock += refinery.production;
+            Edge edge = graph.getEdge(sef, refinery);
+            edge.capacity += refinery.production;
         }
     }
 

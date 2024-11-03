@@ -1,25 +1,25 @@
 package org.example;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.sql.Ref;
+import java.util.*;
 
 public class Graph {
     Refinery refinerySource;
     Map<String, Node> nodes;
     Map<Node, Map<Node, Edge>> adjacencyList;
-    private final Set<Demand> demands;
-    private final Map<String, Set<Demand>> customerDemands;
+    private final List<Demand> demands;
+    private final PriorityQueue<Movement> pendingMovements;
+    private List<Movement> todayMovements;
 
     public Graph() {
         nodes = new HashMap<>();
         adjacencyList = new HashMap<>();
         refinerySource = new Refinery();
-        demands = new HashSet<>();
-        customerDemands = new HashMap<>();
-
         adjacencyList.put(refinerySource, new HashMap<>());
         nodes.put(refinerySource.uuid, refinerySource);
+        demands = new ArrayList<>();
+        pendingMovements = new PriorityQueue<>(new MovementComparator());
     }
 
     public void addNode(Node node) {
@@ -40,6 +40,16 @@ public class Graph {
         return (Refinery) nodes.get(id);
     }
 
+    public List<Refinery> getAllRefineries() {
+        List<Refinery> refineries = new ArrayList<>();
+        for (final Node node : nodes.values()) {
+            if (node.getClass() == Refinery.class) {
+                refineries.add((Refinery) node);
+            }
+        }
+        return refineries;
+    }
+
     public Tank getTank(final String id) {
         return (Tank) nodes.get(id);
     }
@@ -58,6 +68,10 @@ public class Graph {
         edge.capacity = this.getMaxCapacityEdge(edge, nodeFrom, nodeTo);
 
         adjacencyList.get(nodeFrom).put(nodeTo, edge);
+    }
+
+    public Edge getEdge(final Node from, final Node to) {
+        return adjacencyList.get(from).get(to);
     }
 
     public int getMaxCapacityEdge(Edge edge, Node nodeFrom, Node nodeTo) {
@@ -99,15 +113,48 @@ public class Graph {
 
     public void addDemand(final Demand demand) {
         demands.add(demand);
-        customerDemands.putIfAbsent(demand.getCustomerId(), new HashSet<>());
-        customerDemands.get(demand.getCustomerId()).add(demand);
     }
 
-    public Set<Demand> getDemands() {
+    public List<Demand> getDemands() {
         return demands;
     }
 
-    public Set<Demand> getCustomerDemands(final String customerId) {
-        return customerDemands.get(customerId);
+    public void addMovement(final Movement movement) {
+        pendingMovements.add(movement);
+        Node from = nodes.get(movement.getFromId());
+        Node to = nodes.get(movement.getToId());
+        Edge edge = adjacencyList.get(from).get(to);
+        edge.addMovement(movement);
+
+        if (refinerySource.uuid.equals(from.uuid)) {
+            edge.capacity -= movement.getAmount();
+        }
+    }
+
+    public void solveMovements(final int day) {
+        todayMovements = new ArrayList<>();
+        for (final Movement movement : pendingMovements) {
+            if (movement.getArrivalDay() == day) {
+                Node to = nodes.get(movement.getToId());
+                if (to.getClass() == Tank.class) {
+                    Tank tank = (Tank) to;
+                    tank.stock += movement.getAmount();
+                } else if (to.getClass() == Refinery.class) {
+                    Refinery refinery = (Refinery) to;
+                    refinery.stock += movement.getAmount();
+                }
+
+                Node from = nodes.get(movement.getFromId());
+                Edge edge = adjacencyList.get(from).get(to);
+                pendingMovements.remove(movement);
+                edge.removeMovement(movement);
+
+                todayMovements.add(movement);
+            }
+        }
+    }
+
+    public List<Movement> getTodayMovements() {
+        return todayMovements;
     }
 }

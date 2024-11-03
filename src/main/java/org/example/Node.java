@@ -1,5 +1,7 @@
 package org.example;
 
+import java.util.PriorityQueue;
+
 abstract class Node {
     String uuid;
     String name;
