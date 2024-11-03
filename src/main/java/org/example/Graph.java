@@ -9,8 +9,8 @@ public class Graph {
     Map<String, Node> nodes;
     Map<Node, Map<Node, Edge>> adjacencyList;
     private final List<Demand> demands;
-    private final PriorityQueue<Movement> pendingMovementsArrive;
-    private final PriorityQueue<Movement> pendingMovementsStart;
+    private final List<Movement> pendingMovementsArrive;
+    private final List<Movement> pendingMovementsStart;
     private List<Movement> todayMovements;
 
     private List<Refinery> refineries;
@@ -23,8 +23,8 @@ public class Graph {
         this.adjacencyList.put(refinerySource, new HashMap<>());
         this.nodes.put(refinerySource.uuid, refinerySource);
         this.demands = new ArrayList<>();
-        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
-        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsArrive = new ArrayList<>();
+        this.pendingMovementsStart = new ArrayList<>();
         this.todayMovements = new ArrayList<>();
 
         this.refineries = new ArrayList<>();
@@ -35,8 +35,10 @@ public class Graph {
         this.nodes = new HashMap<>();
         this.adjacencyList = new HashMap<>();
         this.demands = new ArrayList<>();
-        this.pendingMovementsArrive = new PriorityQueue<>(new MovementComparator());
-        this.pendingMovementsStart = new PriorityQueue<>(new MovementComparator());
+        this.pendingMovementsArrive = new ArrayList<>();
+        this.pendingMovementsStart = new ArrayList<>();
+        this.refineries = new ArrayList<>();
+        this.refineriesEdges = new ArrayList<>();
 
         for (final Node node : graph.nodes.values()) {
             Node copiedNode = getNode(node);
@@ -181,6 +183,7 @@ public class Graph {
     }
 
     public void solveMovements(final int day) {
+        List<Movement> remove = new ArrayList<>(); // If you remove from 'pendingMovementsStart' while looping over will throw errors
         for (final Movement movement : pendingMovementsStart) {
             if (movement.getStartDay() == day) {
                 Node to = nodes.get(movement.getToId());
@@ -195,13 +198,18 @@ public class Graph {
                     if (from.uuid.equals(refinerySource.uuid)) edge.capacity -= movement.getAmount();
                 }
 
-                pendingMovementsStart.remove(movement);
+//                pendingMovementsStart.remove(movement);
+                remove.add(movement);
                 edge.removeMovementStart(movement);
-                todayMovements.add(movement);
+                if (movement.getFromId() != refinerySource.uuid) todayMovements.add(movement);
                 addMovementArrive(movement);
             }
         }
+        for (final Movement movement : remove) {
+            pendingMovementsStart.remove(movement);
+        }
 
+        remove.clear();
         for (final Movement movement : pendingMovementsArrive) {
             if (movement.getArrivalDay() == day) {
                 Node to = nodes.get(movement.getToId());
@@ -215,9 +223,13 @@ public class Graph {
                     refinery.stock += movement.getAmount();
                 }
 
-                pendingMovementsArrive.remove(movement);
+//                pendingMovementsArrive.remove(movement);
+                remove.add(movement);
                 edge.removeMovementArrive(movement);
             }
+        }
+        for (final Movement movement : remove) {
+            pendingMovementsArrive.remove(movement);
         }
     }
 

@@ -121,11 +121,13 @@ public class Main {
 
             int startDay = currentDay;
             for (Edge edge : edges) {
-                for (int day = 0; day < edge.leadTime; day++) {
-                    int packets = packetsPerDay(day + 1, edge.leadTime, totalPackets);
-                    Movement movement = new Movement(edge.uuid, packets, startDay + edge.leadTime, edge.uuidFrom, edge.uuidTo, startDay);
-                    graph.addMovementStart(movement);
-                }
+                Movement movement = new Movement(edge.uuid, 5, currentDay + 1, edge.uuidFrom, edge.uuidTo, currentDay);
+                graph.addMovementStart(movement);
+//                for (int day = 0; day < edge.leadTime; day++) {
+//                    int packets = packetsPerDay(day + 1, edge.leadTime, totalPackets);
+//                    Movement movement = new Movement(edge.uuid, packets, startDay + edge.leadTime, edge.uuidFrom, edge.uuidTo, startDay);
+//                    graph.addMovementStart(movement);
+//                }
             }
             graph.resetFlows(); // this could break the code
         }
