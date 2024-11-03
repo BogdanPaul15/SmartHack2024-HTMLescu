@@ -34,7 +34,6 @@ public class Graph {
         this.adjacencyList = new HashMap<>();
         this.demands = new ArrayList<>();
         this.pendingMovements = new PriorityQueue<>(new MovementComparator());
-        this.todayMovements = new ArrayList<>();
 
         for (final Node node : graph.nodes.values()) {
             Node copiedNode = getNode(node);
@@ -175,7 +174,6 @@ public class Graph {
     }
 
     public void solveMovements(final int day) {
-        todayMovements = new ArrayList<>();
         for (final Movement movement : pendingMovements) {
             if (movement.getArrivalDay() == day) {
                 Node to = nodes.get(movement.getToId());
@@ -191,10 +189,12 @@ public class Graph {
                 Edge edge = adjacencyList.get(from).get(to);
                 pendingMovements.remove(movement);
                 edge.removeMovement(movement);
-
-                todayMovements.add(movement);
             }
         }
+    }
+
+    public void addTodayMovement(final Movement movement) {
+        todayMovements.add(movement);
     }
 
     public List<Movement> getTodayMovements() {
