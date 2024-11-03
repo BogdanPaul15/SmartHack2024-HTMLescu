@@ -5,7 +5,7 @@ public class Refinery extends Node {
     public double overflowPenalty, underflowPenalty, overOutputPenalty, productionCost, productionCO2;
 
     public Refinery() {
-        super("1", "Source", NodeType.REFINERY);
+        super("sef", "Source", NodeType.REFINERY);
     }
 
     public Refinery(String id, String name, int capacity, int maxOutput, int production, double overflowPenalty,
